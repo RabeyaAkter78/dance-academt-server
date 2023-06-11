@@ -193,7 +193,7 @@ async function run() {
             const isTrue = req.query.isSort;
             console.log(email, isTrue)
             if (isTrue === "true") {
-                const result = await courseCollection.find({ email: email }).sort({createdAt: -1 }).toArray();
+                const result = await courseCollection.find({ email: email }).sort({ createdAt: -1 }).toArray();
                 res.send(result);
                 return;
             }
@@ -201,6 +201,13 @@ async function run() {
             res.send(result);
         })
 
+        // get all course for classes page:
+        app.get('/course', async (req, res) => {
+            const result = await courseCollection.find().toArray();
+            res.send(result);
+            console.log('result', result);
+
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
