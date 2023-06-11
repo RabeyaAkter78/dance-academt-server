@@ -13,12 +13,13 @@ app.use(express.json());
 // verify jwt:
 const verifyJWt = (req, res, next) => {
     const authorization = req.headers.authorization;
+    // console.log(authorization);
     if (!authorization) {
         return res.status(401).send({ error: true, message: 'Unauthorized Access' });
     }
     // bearer token
     const token = authorization.split(' ')[1];
-    console.log(token);
+    // console.log(token);
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
 
@@ -77,7 +78,7 @@ async function run() {
 
 
         app.get('/class', async (req, res) => {
-            const result = await classCollection.find().sort({ student_number: -1 }).limit(6).toArray();
+            const result = await classCollection.find().sort({ student_number: -1 }).toArray();
             res.send(result);
         })
         app.get('/event', async (req, res) => {
@@ -99,11 +100,11 @@ async function run() {
         // add user api in db:
         app.post('/users', async (req, res) => {
             const user = req.body;
-            console.log('user:', user);
+            // console.log('user:', user);
 
             const query = { email: user.email }
             const existingUser = await userCollection.findOne(query);
-            console.log('existing user:', existingUser);
+            // console.log('existing user:', existingUser);
 
             if (existingUser) {
                 return res.send({ message: 'user already exists' })
@@ -155,6 +156,7 @@ async function run() {
         // get instructor by emial
         app.get('/users/instructor/:email', verifyJWt, async (req, res) => {
             const email = req.params.email;
+            console.log(158, email)
 
             if (req.decoded.email !== email) {
                 res.send({ instructor: false })
@@ -162,7 +164,8 @@ async function run() {
 
             const query = { email: email }
             const user = await userCollection.findOne(query);
-            const result = { instructor: user?.role === 'instructor' }
+            const result = { instructor: user.role === 'instructor' }
+            console.log('line:166', result)
             res.send(result);
         })
 
@@ -191,7 +194,7 @@ async function run() {
         app.get("/myClass", async (req, res) => {
             const email = req.query.email;
             const isTrue = req.query.isSort;
-            console.log(email, isTrue)
+            // console.log(email, isTrue)
             if (isTrue === "true") {
                 const result = await courseCollection.find({ email: email }).sort({ createdAt: -1 }).toArray();
                 res.send(result);
@@ -205,7 +208,7 @@ async function run() {
         app.get('/course', async (req, res) => {
             const result = await courseCollection.find().toArray();
             res.send(result);
-            console.log('result', result);
+            // console.log('result', result);
 
         })
 
