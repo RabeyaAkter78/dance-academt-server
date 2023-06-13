@@ -78,7 +78,8 @@ async function run() {
 
 
         app.get('/class', async (req, res) => {
-            const result = await classCollection.find().sort({ student_number: -1 }).toArray();
+            const result = await courseCollection.find().sort({ student_number: -1 }).toArray();
+            // const result = await classCollection.find().sort({ student_number: -1 }).toArray();
             res.send(result);
         })
         app.get('/event', async (req, res) => {
@@ -156,7 +157,7 @@ async function run() {
         // get instructor by emial
         app.get('/users/instructor/:email', verifyJWt, async (req, res) => {
             const email = req.params.email;
-            console.log(158, email)
+            // console.log(158, email)
 
             if (req.decoded.email !== email) {
                 res.send({ instructor: false })
@@ -165,7 +166,7 @@ async function run() {
             const query = { email: email }
             const user = await userCollection.findOne(query);
             const result = { instructor: user.role === 'instructor' }
-            console.log('line:166', result)
+            // console.log(168, result)
             res.send(result);
         })
 
@@ -178,23 +179,14 @@ async function run() {
             res.send(result);
         })
 
-        // add class ny instructor:
-        app.post('/addAClass', async (req, res) => {
-            const classes = req.body;
-            // classes.createdAt = new Date();
-            if (!classes) {
-                return res.status(404).send({ message: "invalid request" })
-            }
-            const result = await courseCollection.insertOne(classes);
-            console.log(classes);
-            res.send(result)
-        })
+
 
         // get class by instructor:
+        // app.get("/course", async (req, res) => {
         app.get("/myClass", async (req, res) => {
             const email = req.query.email;
             const isTrue = req.query.isSort;
-            // console.log(email, isTrue)
+            console.log(187, email, isTrue)
             if (isTrue === "true") {
                 const result = await courseCollection.find({ email: email }).sort({ createdAt: -1 }).toArray();
                 res.send(result);
@@ -203,6 +195,29 @@ async function run() {
             const result = await courseCollection.find({ email: email }).sort({ createdAt: 1 }).toArray();
             res.send(result);
         })
+
+        // add class ny instructor:
+
+        // app.post('/course', async (req, res) => {
+        app.post('/addAClass', async (req, res) => {
+            const classes = req.body;
+            // classes.createdAt = new Date();
+            if (!classes) {
+                return res.status(404).send({ message: "invalid request" })
+            }
+            const result = await courseCollection.insertOne(classes);
+            console.log(189, classes);
+            res.send(result)
+        })
+
+        // app.post('/course', async (req, res) => {
+        //     const newClass = req.body;
+        //     const result = await courseCollection.insertOne(newClass)
+        //     res.send(result);
+        //     console.log(214, result);
+
+        // })
+
 
         // get all course for classes page:
         app.get('/course', async (req, res) => {
