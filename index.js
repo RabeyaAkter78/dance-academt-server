@@ -49,7 +49,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const classCollection = client.db("danceDb").collection("class");
         const eventCollection = client.db("danceDb").collection("event");
@@ -182,7 +182,6 @@ async function run() {
 
 
         // get class by instructor:
-        // app.get("/course", async (req, res) => {
         app.get("/myClass", async (req, res) => {
             const email = req.query.email;
             const isTrue = req.query.isSort;
@@ -197,35 +196,38 @@ async function run() {
         })
 
         // add class ny instructor:
-
-        // app.post('/course', async (req, res) => {
         app.post('/addAClass', async (req, res) => {
             const classes = req.body;
-            // classes.createdAt = new Date();
+            classes.createdAt = new Date();
             if (!classes) {
                 return res.status(404).send({ message: "invalid request" })
             }
             const result = await courseCollection.insertOne(classes);
-            console.log(189, classes);
+            console.log(207, classes);
             res.send(result)
         })
-
-        // app.post('/course', async (req, res) => {
-        //     const newClass = req.body;
-        //     const result = await courseCollection.insertOne(newClass)
-        //     res.send(result);
-        //     console.log(214, result);
-
-        // })
 
 
         // get all course for classes page:
         app.get('/course', async (req, res) => {
-            const result = await courseCollection.find().toArray();
+            const query = { status: { $nin: ["pending", "denied"] } };
+            const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
             res.send(result);
             // console.log('result', result);
 
         })
+
+        // managed classes(admin):
+        app.get("/manageCourses", async (req, res) => {
+            const query = { status: { $in: ["pending", "approved", "denied"] } };
+            const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
+            res.send(result)
+        })
+
+
+
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
