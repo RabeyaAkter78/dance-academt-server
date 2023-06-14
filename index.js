@@ -13,7 +13,7 @@ app.use(express.json());
 // verify jwt:
 const verifyJWt = (req, res, next) => {
     const authorization = req.headers.authorization;
-    // console.log(authorization);
+    // console.log(16, authorization);
     if (!authorization) {
         return res.status(401).send({ error: true, message: 'Unauthorized Access' });
     }
@@ -51,11 +51,12 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
 
-        const classCollection = client.db("danceDb").collection("class");
         const eventCollection = client.db("danceDb").collection("event");
         const userCollection = client.db("danceDb").collection("user");
         const instructorCollection = client.db("danceDb").collection("instructor");
         const courseCollection = client.db("danceDb").collection("course");
+        const selectedClassCollection = client.db("danceDb").collection("selectedClass");
+
 
         // create JWT Token:
         app.post('/jwt', (req, res) => {
@@ -73,30 +74,47 @@ async function run() {
                 return res.status(403).send({ error: true, message: 'forbidden Access' });
             }
             next();
-        }
+        };
 
 
+        // Home page api:
 
+        // get All Class for home page:
         app.get('/class', async (req, res) => {
             const result = await courseCollection.find().sort({ student_number: -1 }).toArray();
-            // const result = await classCollection.find().sort({ student_number: -1 }).toArray();
             res.send(result);
-        })
-        app.get('/event', async (req, res) => {
-            const result = await eventCollection.find().toArray();
+            console.log(82, result.length)
+        });
+
+        // get all course classes page:
+        app.get('/course', async (req, res) => {
+            const query = { status: { $nin: ["pending", "denied"] } };
+            const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
             res.send(result);
-        })
+            // console.log('result', result);
+
+        });
+
+        // top Instructor section :
         app.get('/instructor', async (req, res) => {
             const result = await instructorCollection.find().toArray();
             res.send(result);
-        })
+        });
 
+        // event section:
+        app.get('/event', async (req, res) => {
+            const result = await eventCollection.find().toArray();
+            res.send(result);
+        });
+
+
+        // DASHBOARD: 
 
         // get User from db:
         app.get('/users', verifyJWt, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
-        })
+        });
 
         // add user api in db:
         app.post('/users', async (req, res) => {
@@ -105,8 +123,6 @@ async function run() {
 
             const query = { email: user.email }
             const existingUser = await userCollection.findOne(query);
-            // console.log('existing user:', existingUser);
-
             if (existingUser) {
                 return res.send({ message: 'user already exists' })
             }
@@ -127,7 +143,7 @@ async function run() {
             res.send(result);
         });
 
-        // get admin by email
+        // get admin by email:
         app.get('/users/admin/:email', verifyJWt, async (req, res) => {
             const email = req.params.email;
 
@@ -139,7 +155,7 @@ async function run() {
             const user = await userCollection.findOne(query);
             const result = { admin: user?.role === 'admin' }
             res.send(result);
-        })
+        });
 
 
         // set Instructor role:
@@ -154,15 +170,15 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc);
             res.send(result);
         });
-        // get instructor by emial
+
+        // get instructor by email:
         app.get('/users/instructor/:email', verifyJWt, async (req, res) => {
             const email = req.params.email;
-            // console.log(158, email)
+            console.log(158, email)
 
             if (req.decoded.email !== email) {
                 res.send({ instructor: false })
             }
-
             const query = { email: email }
             const user = await userCollection.findOne(query);
             const result = { instructor: user.role === 'instructor' }
@@ -180,22 +196,23 @@ async function run() {
         })
 
 
-
-        // get class by instructor:
+        // get class by instructor MY CLASS:
         app.get("/myClass", async (req, res) => {
+            console.log("myClass");
             const email = req.query.email;
-            const isTrue = req.query.isSort;
-            console.log(187, email, isTrue)
-            if (isTrue === "true") {
-                const result = await courseCollection.find({ email: email }).sort({ createdAt: -1 }).toArray();
-                res.send(result);
-                return;
-            }
-            const result = await courseCollection.find({ email: email }).sort({ createdAt: 1 }).toArray();
-            res.send(result);
+            // if (req.decoded.email !== email) {
+            //     return res.send({ instructor: false })
+            // }
+            const query = { instructor_email: email }
+
+            const result = await courseCollection.find(query).toArray();
+            console.log(189, result);
+            return res.send(result)
+
         })
 
-        // add class ny instructor:
+
+        // set class ny instructor ADD A CLASS:
         app.post('/addAClass', async (req, res) => {
             const classes = req.body;
             classes.createdAt = new Date();
@@ -205,24 +222,70 @@ async function run() {
             const result = await courseCollection.insertOne(classes);
             console.log(207, classes);
             res.send(result)
-        })
+        });
+
 
 
         // get all course for classes page:
-        app.get('/course', async (req, res) => {
-            const query = { status: { $nin: ["pending", "denied"] } };
-            const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
-            res.send(result);
-            // console.log('result', result);
+        // app.get('/course', async (req, res) => {
+        //     const query = { status: { $nin: ["pending", "denied"] } };
+        //     const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
+        //     res.send(result);
+        //     // console.log('result', result);
 
-        })
+        // });
+
+
 
         // managed classes(admin):
         app.get("/manageCourses", async (req, res) => {
             const query = { status: { $in: ["pending", "approved", "denied"] } };
-            const result = await courseCollection.find(query).sort({ student_number: -1 }).toArray();
+            const result = await courseCollection.find(query).toArray();
             res.send(result)
-        })
+        });
+
+        // set selected class By user SELECTED CLASS:
+        app.post('/selectedClass', async (req, res) => {
+            const classes = req.body;
+            console.log(229, classes);
+
+            const result = await selectedClassCollection.insertOne(classes);
+            res.send(result)
+        });
+
+        // get selected classes:
+        app.get('/selectedClass', async (req, res) => {
+            const result = await selectedClassCollection.find().toArray();
+            res.send(result);
+        });
+
+        // // DELETE SELECTED CLASS:
+        // app.delete('/selectedClass/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = { _id: new ObjectId(id) }
+        //     const result = await selectedClassCollection.deleteOne(query);
+        //     res.send(result);
+        // })
+
+
+
+
+        // Approved course by Admin:
+        app.patch("/aproveCourses/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: "approved"
+                }
+            }
+            const result = await courseCollection.updateOne(query, updatedDoc);
+            res.send(result)
+            console.log(248, result);
+
+        });
+
+
 
 
 
