@@ -259,13 +259,13 @@ async function run() {
             res.send(result);
         });
 
-        // // DELETE SELECTED CLASS:
-        // app.delete('/selectedClass/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) }
-        //     const result = await selectedClassCollection.deleteOne(query);
-        //     res.send(result);
-        // })
+        // DELETE SELECTED CLASS:
+        app.delete('/selectedClass/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await selectedClassCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // Approved course by Admin:
         app.patch("/aproveCourses/:id", async (req, res) => {
@@ -282,6 +282,39 @@ async function run() {
 
         });
 
+        // Denied By ADmin :
+        app.patch("/deniedCourses/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    status: "denied"
+                }
+            }
+            const result = await courseCollection.updateOne(query, updatedDoc);
+            res.send(result)
+            console.log(248, result);
+
+        });
+
+        // Admin FeedBack:
+        app.patch("/adminFeedBack/:id", async (req, res) => {
+            const id = req.params.id;
+            const feedbackData = req.body;
+            console.log(feedbackData)
+            const query = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    feedBack: feedbackData.adminFeedBack
+                },
+            };
+            const result = await courseCollection.updateOne(query, updatedDoc)
+            res.send(result)
+
+        })
+
+
+
         //CREATE PAYMENT INTENT:
         app.post('/createPayment', verifyJWt, async (req, res) => {
             const { price } = req.body;
@@ -296,26 +329,21 @@ async function run() {
             })
         });
 
-        
+
         // set PAYMENT Api:
         app.post('/payments', verifyJWt, async (req, res) => {
             const payment = req.body;
+            payment.createdAt = new Date();
             const result = await paymentCollection.insertOne(payment);
+
             res.send({ result });
         });
 
         // GET PAYMENT HISTORY:
-
         app.get('/payments', async (req, res) => {
-            const result = await paymentCollection.find().toArray();
+            const result = await paymentCollection.find().sort({ createdAt: -1 }).toArray();
             res.send(result);
         });
-
-
-
-
-
-
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
