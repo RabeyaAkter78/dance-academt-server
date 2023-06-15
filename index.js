@@ -58,6 +58,8 @@ async function run() {
         const courseCollection = client.db("danceDb").collection("course");
         const selectedClassCollection = client.db("danceDb").collection("selectedClass");
 
+        const paymentCollection = client.db("danceDb").collection("payments");
+
 
         // create JWT Token:
         app.post('/jwt', (req, res) => {
@@ -257,16 +259,6 @@ async function run() {
             res.send(result);
         });
 
-        // app.get('/selectedClass/:id', async (req, res) => {
-        //     const  id  = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result =await selectedClassCollection.findOne(query);
-        //     console.log(result);
-
-        // })
-
-
-
         // // DELETE SELECTED CLASS:
         // app.delete('/selectedClass/:id', async (req, res) => {
         //     const id = req.params.id;
@@ -302,7 +294,24 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret
             })
-        })
+        });
+
+        // set PAYMENT Api:
+
+        app.post('/payments', verifyJWt, async (req, res) => {
+            const payment = req.body;
+            const result = await paymentCollection.insertOne(payment);
+            res.send(result);
+
+        });
+
+        // GET PAYMENT HISTORY:
+
+        app.get('/payments', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        });
+
 
 
 
