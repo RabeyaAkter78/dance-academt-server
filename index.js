@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 var jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.SECRET_PAYMENT_KEY)
 const port = process.env.PORT || 5000;
 
 
@@ -174,14 +175,14 @@ async function run() {
         // get instructor by email:
         app.get('/users/instructor/:email', verifyJWt, async (req, res) => {
             const email = req.params.email;
-            console.log(158, email)
+            // console.log(158, email)
 
             if (req.decoded.email !== email) {
                 res.send({ instructor: false })
             }
             const query = { email: email }
             const user = await userCollection.findOne(query);
-            const result = { instructor: user.role === 'instructor' }
+            const result = { instructor: user?.role === 'instructor' }
             // console.log(168, result)
             res.send(result);
         })
@@ -200,13 +201,10 @@ async function run() {
         app.get("/myClass", async (req, res) => {
             console.log("myClass");
             const email = req.query.email;
-            // if (req.decoded.email !== email) {
-            //     return res.send({ instructor: false })
-            // }
             const query = { instructor_email: email }
 
             const result = await courseCollection.find(query).toArray();
-            console.log(189, result);
+            // console.log(189, result);
             return res.send(result)
 
         })
@@ -220,7 +218,7 @@ async function run() {
                 return res.status(404).send({ message: "invalid request" })
             }
             const result = await courseCollection.insertOne(classes);
-            console.log(207, classes);
+            // console.log(207, classes);
             res.send(result)
         });
 
@@ -247,7 +245,7 @@ async function run() {
         // set selected class By user SELECTED CLASS:
         app.post('/selectedClass', async (req, res) => {
             const classes = req.body;
-            console.log(229, classes);
+            // console.log(229, classes);
 
             const result = await selectedClassCollection.insertOne(classes);
             res.send(result)
@@ -259,6 +257,16 @@ async function run() {
             res.send(result);
         });
 
+        // app.get('/selectedClass/:id', async (req, res) => {
+        //     const  id  = req.params.id;
+        //     const query = { _id: new ObjectId(id) };
+        //     const result =await selectedClassCollection.findOne(query);
+        //     console.log(result);
+
+        // })
+
+
+
         // // DELETE SELECTED CLASS:
         // app.delete('/selectedClass/:id', async (req, res) => {
         //     const id = req.params.id;
@@ -266,9 +274,6 @@ async function run() {
         //     const result = await selectedClassCollection.deleteOne(query);
         //     res.send(result);
         // })
-
-
-
 
         // Approved course by Admin:
         app.patch("/aproveCourses/:id", async (req, res) => {
@@ -285,7 +290,19 @@ async function run() {
 
         });
 
-
+        //CREATE PAYMENT INTENT:
+        app.post('/createPayment', verifyJWt, async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
 
 
 
