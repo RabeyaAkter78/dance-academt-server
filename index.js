@@ -296,13 +296,12 @@ async function run() {
             })
         });
 
+        
         // set PAYMENT Api:
-
         app.post('/payments', verifyJWt, async (req, res) => {
             const payment = req.body;
             const result = await paymentCollection.insertOne(payment);
-            res.send(result);
-
+            res.send({ result });
         });
 
         // GET PAYMENT HISTORY:
