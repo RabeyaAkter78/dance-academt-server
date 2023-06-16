@@ -204,6 +204,8 @@ async function run() {
             console.log("myClass");
             const email = req.query.email;
             const query = { instructor_email: email }
+            console.log(207, email);
+
 
             const result = await courseCollection.find(query).toArray();
             // console.log(189, result);
@@ -255,7 +257,9 @@ async function run() {
 
         // get selected classes:
         app.get('/selectedClass', async (req, res) => {
-            const result = await selectedClassCollection.find().toArray();
+            const email = req.query.email;
+            const query = { email: email }
+            const result = await selectedClassCollection.find(query).toArray();
             res.send(result);
         });
 
@@ -334,6 +338,7 @@ async function run() {
 
         // set PAYMENT Api:
         app.post('/payments', verifyJWt, async (req, res) => {
+
             const payment = req.body;
             payment.createdAt = new Date();
             const result = await paymentCollection.insertOne(payment);
@@ -343,8 +348,14 @@ async function run() {
 
         // GET PAYMENT HISTORY:
         app.get('/payments', async (req, res) => {
-            const result = await paymentCollection.find().sort({ createdAt: -1 }).toArray();
+            const email = req.query.email;
+            console.log(352, email);
+
+            const query = { email: email }
+            const result = await paymentCollection.find(query).sort({ createdAt: -1 }).toArray();
             res.send(result);
+            console.log(357, result);
+
         });
 
         // Send a ping to confirm a successful connection
