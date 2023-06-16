@@ -301,7 +301,7 @@ async function run() {
         app.patch("/adminFeedBack/:id", async (req, res) => {
             const id = req.params.id;
             const feedbackData = req.body;
-            console.log(feedbackData)
+            console.log(304, feedbackData, id)
             const query = { _id: new ObjectId(id) }
             const updatedDoc = {
                 $set: {
@@ -309,7 +309,9 @@ async function run() {
                 },
             };
             const result = await courseCollection.updateOne(query, updatedDoc)
-            res.send(result)
+            res.send(result);
+            console.log(313, result);
+
 
         })
 
