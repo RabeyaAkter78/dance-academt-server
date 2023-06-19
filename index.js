@@ -297,7 +297,7 @@ async function run() {
             }
             const result = await courseCollection.updateOne(query, updatedDoc);
             res.send(result)
-            console.log(248, result);
+            // console.log(248, result);
 
         });
 
@@ -305,7 +305,7 @@ async function run() {
         app.patch("/adminFeedBack/:id", async (req, res) => {
             const id = req.params.id;
             const feedbackData = req.body;
-            console.log(304, feedbackData, id)
+            console.log(308, feedbackData, id)
             const query = { _id: new ObjectId(id) }
             const updatedDoc = {
                 $set: {
@@ -324,7 +324,7 @@ async function run() {
         //CREATE PAYMENT INTENT:
         app.post('/createPayment', verifyJWt, async (req, res) => {
             const { price } = req.body;
-            const amount = price * 100;
+            const amount = parseFloat(price * 100);
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
                 currency: 'usd',
@@ -338,25 +338,32 @@ async function run() {
 
         // set PAYMENT Api:
         app.post('/payments', verifyJWt, async (req, res) => {
-
+            // insert class:
             const payment = req.body;
             payment.createdAt = new Date();
-            const result = await paymentCollection.insertOne(payment);
+            const InsertResult = await paymentCollection.insertOne(payment);
 
-            res.send({ result });
+            // delete result:
+
+
+
+            res.send({ InsertResult });
         });
 
         // GET PAYMENT HISTORY:
         app.get('/payments', async (req, res) => {
             const email = req.query.email;
-            console.log(352, email);
-
+            // console.log(352, email);
             const query = { email: email }
             const result = await paymentCollection.find(query).sort({ createdAt: -1 }).toArray();
             res.send(result);
             console.log(357, result);
 
         });
+
+        // delete dta from selected class:
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
